@@ -10,10 +10,12 @@ public class BankService {
 
     // Login
     public int login(String name, String pin) {
+
         try {
             Connection con = DBConnection.getConnection();
 
             String sql = "SELECT account_id FROM accounts WHERE name=? AND pin=?";
+
             PreparedStatement ps = con.prepareStatement(sql);
 
             ps.setString(1, name);
@@ -22,17 +24,11 @@ public class BankService {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                System.out.println("\n==================================================");
-                System.out.println("         WELCOME TO BANKING SYSTEM");
-                System.out.println("==================================================");
-                System.out.println("Login Successful!");
-                System.out.println("User Account ID : " + rs.getInt("account_id"));
-                System.out.println("==================================================");
                 return rs.getInt("account_id");
             }
 
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
 
         return -1;
@@ -59,12 +55,6 @@ public class BankService {
 
             if (rows > 0) {
                 log(id, id, id, "DEPOSIT", amount);
-
-
-                System.out.println("\n-----------------------------------");
-                System.out.println("Deposit Successful!");
-                System.out.println("Amount Deposited : ₹" + amount);
-                System.out.println("-----------------------------------");
 
             } else {
                 System.out.println("Deposit Failed!");
@@ -109,10 +99,6 @@ public class BankService {
 
                     log(id, id, id, "WITHDRAW", amount);
 
-                    System.out.println("\n-----------------------------------");
-                    System.out.println("Withdraw Successful!");
-                    System.out.println("Amount Withdrawn : ₹" + amount);
-                    System.out.println("-----------------------------------");
                 } else {
                     System.out.println("Insufficient Balance!");
                 }
@@ -150,9 +136,34 @@ public class BankService {
                 System.out.println("=================================");
             }
 
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public double getBalance(int id) {
+
+        try {
+
+            Connection con = DBConnection.getConnection();
+
+            String sql = "SELECT balance FROM accounts WHERE account_id=?";
+
+            PreparedStatement ps = con.prepareStatement(sql);
+
+            ps.setInt(1, id);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getDouble("balance");
+            }
+
         } catch (Exception e) {
             System.out.println(e);
         }
+
+        return 0;
     }
 
     // Mini Statement
@@ -162,9 +173,9 @@ public class BankService {
 
             Connection con = DBConnection.getConnection();
 
-            String sql = "SELECT transaction_id, type, amount, transaction_time " +
+            String sql = "SELECT transaction_id, type, amount, date " +
                     "FROM transactions WHERE account_id=? " +
-                    "ORDER BY transaction_time DESC";
+                    "ORDER BY date DESC";
 
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setInt(1, id);
@@ -185,7 +196,7 @@ public class BankService {
                         rs.getInt("transaction_id"),
                         rs.getString("type"),
                         rs.getDouble("amount"),
-                        rs.getTimestamp("transaction_time"));
+                        rs.getTimestamp("date"));
             }
 
             if (!found) {
@@ -198,6 +209,7 @@ public class BankService {
             System.out.println(e);
         }
     }
+
     // Transfer Money
     public void transferMoney(int senderId, int receiverId, double amount) {
 
@@ -282,11 +294,34 @@ public class BankService {
             System.out.println(e);
         }
     }
+
+    public ResultSet getMiniStatement(int userId) {
+
+        try {
+
+            Connection con = DBConnection.getConnection();
+
+            String sql = "SELECT transaction_id, type, amount, date " +
+                    "FROM transactions WHERE account_id=? " +
+                    "ORDER BY date DESC";
+
+            PreparedStatement ps = con.prepareStatement(sql);
+
+            ps.setInt(1, userId);
+
+            return ps.executeQuery();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     // Transaction Log
     private void log(int accountId, int fromAccount, int toAccount, String type, double amount) {
 
         try {
-
             Connection con = DBConnection.getConnection();
 
             String sql = "INSERT INTO transactions(account_id, from_account, to_account, type, amount) VALUES (?, ?, ?, ?, ?)";
@@ -302,7 +337,7 @@ public class BankService {
             ps.executeUpdate();
 
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 }
